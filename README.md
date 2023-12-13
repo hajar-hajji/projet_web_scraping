@@ -10,6 +10,7 @@ Ensure you have Python 3.x installed.
 ### Clone the Repository
 ```
 git clone https://github.com/hajar-hajji/projet_web_scraping.git
+cd projet_web_scraping
 ```
 ### Set Up the Virtual Environment
 #### Creating the Virtual Environment
