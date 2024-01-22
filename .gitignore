@@ -1,3 +1,4 @@
 myvenv/
 text_scraping/scripts/utils/__pycache__/
+data_scraping/beautiful_soup/utils/__pycache__/
 text_scraping/scraped_data/
