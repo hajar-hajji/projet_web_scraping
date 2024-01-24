@@ -1,6 +1,6 @@
 def main():
     
-    print("Choisissez le réseau social à scraper :")
+    print("Choose the social media platform to scrape:")
     print("1. Instagram")
     print("2. Reddit")
     print("3. Twitter")
@@ -8,22 +8,22 @@ def main():
     print()
     print()
 
-    choix = int(input("Entrez le numéro de votre choix : "))
+    choice = int(input("Enter the number of your choice: "))
 
-    if choix == 1:
+    if choice == 1:
         import instagram_scraper
         instagram_scraper.run()
-    elif choix == 2:
+    elif choice == 2:
         import reddit_scraper
         reddit_scraper.run()
-    elif choix == 3:
+    elif choice == 3:
         import twitter_scraper
         twitter_scraper.run()
-    elif choix == 4:
+    elif choice == 4:
         import youtube_scraper
         youtube_scraper.run()
     else:
-        print("Choix invalide!! Veuillez réessayer..")
+        print("Invalid choice!! Please try again.")
 
 if __name__ == "__main__":
     main()
