@@ -4,6 +4,7 @@ import csv
 import datetime as dt
 from utils.nlp import *
 from utils.utils import *
+import time
 
 def scrap_reddit(reddit, searched_words, path, num_posts=2, print_results=True, store_results=False, type_data='posts'):
     # Access the subreddit 'all'
@@ -14,41 +15,51 @@ def scrap_reddit(reddit, searched_words, path, num_posts=2, print_results=True, 
     data_to_print = []
     # Extract information from each post or comment
     for post in results:
-        if type_data == 'posts':
-            title = post.title  # Title of the post
-            content = post.selftext  # Content of the post
-            combined = title + ' ' + content
-            sentiment_label, n_stars = analyze_sentiment(combined[:512]) # Sentiment detection (post)
-            blob_score, vader_score = get_polarity_scores(combined)
-            data_info = {
-                "Title": title, 
-                "Content": content,  
-                "Publication Date": dt.datetime.fromtimestamp(post.created),  # Date of post creation
-                "Number of Comments": post.num_comments,  # Number of comments on the post
-                "URL": post.url,  # URL of the post
-                "Sentiment": sentiment_label,
-                "N_stars": n_stars,
-                "Blob Polarity Score": blob_score,
-                "Vader Polarity Score": vader_score }
-        elif type_data == 'comments':
-            post.comments.replace_more(limit=None)  # Load all comments
-            for comment in post.comments.list():
-                # Check if the comment contains all the specified keywords
-                if all(keyword.lower() in comment.body.lower() for keyword in searched_words):
-                    co = comment.body
-                    sentiment_label, n_stars = analyze_sentiment(co[:512]) # Sentiment detection (comment)
-                    blob_score, vader_score = get_polarity_scores(co)
-                    data_info = {
-                        "Author": comment.author.name if comment.author else "[deleted]",
-                        "Comment": co,
-                        "Upvotes": comment.score,
-                        "Publication Date": dt.datetime.fromtimestamp(comment.created),
-                        "Subreddit": comment.subreddit.display_name,
-                        "Sentiment": sentiment_label,
-                        "N_stars": n_stars,
-                        "Blob Polarity Score": blob_score,
-                        "Vader Polarity Score": vader_score }
-        data_to_print.append(data_info)
+        try:
+            if type_data == 'posts':
+                title = post.title  # Title of the post
+                content = post.selftext  # Content of the post
+                combined = title + ' ' + content
+                sentiment_label, n_stars = analyze_sentiment(combined[:512]) # Sentiment detection (post)
+                blob_score, vader_score = get_polarity_scores(combined)
+                data_info = {
+                    "Title": title, 
+                    "Content": content,  
+                    "Publication Date": dt.datetime.fromtimestamp(post.created),  # Date of post creation
+                    "Number of Comments": post.num_comments,  # Number of comments on the post
+                    "URL": post.url,  # URL of the post
+                    "Sentiment": sentiment_label,
+                    "N_stars": n_stars,
+                    "Blob Polarity Score": blob_score,
+                    "Vader Polarity Score": vader_score }
+            elif type_data == 'comments':
+                post.comments.replace_more(limit=None)  # Load all comments
+                for comment in post.comments.list():
+                    # Check if the comment contains all the specified keywords
+                    if all(keyword.lower() in comment.body.lower() for keyword in searched_words):
+                        co = comment.body
+                        sentiment_label, n_stars = analyze_sentiment(co[:512]) # Sentiment detection (comment)
+                        blob_score, vader_score = get_polarity_scores(co)
+                        data_info = {
+                            "Author": comment.author.name if comment.author else "Unknown",
+                            "Comment": co,
+                            "Upvotes": comment.score,
+                            "Publication Date": dt.datetime.fromtimestamp(comment.created),
+                            "Subreddit": comment.subreddit.display_name,
+                            "Sentiment": sentiment_label,
+                            "N_stars": n_stars,
+                            "Blob Polarity Score": blob_score,
+                            "Vader Polarity Score": vader_score }
+            data_to_print.append(data_info)
+        except praw.exceptions.RedditAPIException as e:
+            if e.response.status_code == 429:
+                # Handle rate limit exceeded
+                print("Rate limit exceeded. Waiting before retrying.")
+                time.sleep(60)  # Wait for a minute before retrying
+            else:
+                # Handle other API exceptions
+                print(f"Reddit API exception: {e}")
+
     # If print_results is True, print post or comment information
     if print_results:
         for data_info in data_to_print:
